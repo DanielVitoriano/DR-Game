@@ -22,16 +22,6 @@ public class movement : MonoBehaviour
         cm = FindObjectOfType<CinemachineVirtualCamera>();
     }
 
-    void Start()
-    {
-        
-    }
-
-    void Update()
-    {
-        
-    }
-
     private void FixedUpdate() {
         Move();
         SetAnim();
@@ -42,7 +32,7 @@ public class movement : MonoBehaviour
     private void Running(){
         float targetSpeed = isRunning ? speedBase * 5.0f : speedBase;
         speed = Mathf.Lerp(speed, targetSpeed, Time.deltaTime * 3.0f);
-
+        
         isRunning = Input.GetButton("Run");
         anim.SetBool("isRunning", isRunning);
 
