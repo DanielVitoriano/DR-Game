@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Cinemachine;
 
 public class movement : MonoBehaviour
 {
@@ -10,12 +11,15 @@ public class movement : MonoBehaviour
     private Vector3 inputVector;
     private float speed = 2f;
     private float speedBase;
-    public bool isRunning = false;
+    private bool isRunning = false;
+    private CinemachineVirtualCamera  cm;
+    private bool isOnFloor = true;
 
     private void Awake() {
         characterController = GetComponent<CharacterController>();
         anim = GetComponent<Animator>();
         speedBase = speed;
+        cm = FindObjectOfType<CinemachineVirtualCamera>();
     }
 
     void Start()
@@ -32,6 +36,7 @@ public class movement : MonoBehaviour
         Move();
         SetAnim();
         Running();
+        Jump();
     }
 
     private void Running(){
@@ -43,9 +48,35 @@ public class movement : MonoBehaviour
 
     }
 
+    private bool IsGrounded() {
+        float distanceToGround = 0.1f;
+        RaycastHit hit;
+        if (Physics.Raycast(transform.position, -Vector3.up, out hit, distanceToGround + 0.1f)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private void Jump(){
+        isOnFloor = IsGrounded();
+        if(Input.GetAxis("Jump") == 1 && isOnFloor){
+            anim.SetBool("isJumping", true);
+        }else{
+            anim.SetBool("isJumping", false);
+        }
+    }
+
     private void Move(){
         inputVector.Set(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
         inputVector.Normalize();
+
+        Vector3 cameraForward = cm.transform.forward;
+        cameraForward.y = 0f;
+
+        if(inputVector != Vector3.zero){
+            transform.rotation = Quaternion.LookRotation(cameraForward) * Quaternion.Euler(0f, 0f, 0f);
+        }
 
         if(inputVector.z < 0){
             isRunning = false;
@@ -59,7 +90,8 @@ public class movement : MonoBehaviour
             return;
         }
 
-        characterController.Move(inputVector * speed * Time.fixedDeltaTime);
+        Vector3 moveDirection = transform.rotation * inputVector;
+        characterController.Move(moveDirection * speed * Time.fixedDeltaTime);
     }
 
     private void SetAnim(){
